@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Result</title>
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #353131;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
+
+      #result-container {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+
+      #result-container table {
+        width: 100%;
+        margin-top: 20px;
+        border-collapse: collapse;
+      }
+
+      #result-container table,
+      #result-container th,
+      #result-container td {
+        border: 1px solid #ddd;
+      }
+
+      #result-container th,
+      #result-container td {
+        padding: 12px;
+        text-align: center;
+      }
+
+      #result-container th {
+        background-color: #f2f2f2;
+        text-align: center;
+      }
+
+      #result-container button {
+        background-color: #4caf50;
+        color: white;
+        padding: 10px;
+        border: none;
+        cursor: pointer;
+        margin-top: 20px;
+        border-radius: 5px;
+        font-size: 16px;
+      }
+
+      #logout-button {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        background-color: #dc3545;
+        color: white;
+        padding: 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="result-container">
+      <!-- Result data will be dynamically inserted here using JavaScript -->
+      <table>
+        <tr id="resultRow">
+          <th>Roll Number</th>
+          <td id="rollNumber"></td>
+        </tr>
+        <tr id="resultRow">
+          <th>Date of Birth</th>
+          <td id="dob"></td>
+        </tr>
+        <tr id="resultRow">
+          <th>Name</th>
+          <td id="name"></td>
+        </tr>
+
+        <tr id="resultRow">
+          <th>Score</th>
+          <td id="score"></td>
+        </tr>
+      </table>
+
+      <button id="seeAnotherResult" onclick="resultLogin()">
+        See Another Result
+      </button>
+    </div>
+
+    <button id="logout-button" onclick="logout()">Logout</button>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+      const address = "http://localhost:3000";
+      const token = localStorage.getItem("token");
+
+      axios
+        .get(`${address}/student/get-result`, {
+          headers: { Authorization: token },
+        })
+        .then((response) => {
+          console.log(response);
+          showResult(response.data.result);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+
+      // Fetch and update result data dynamically using Axios or fetch API
+      // Sample data (replace this with actual API call)
+
+      function showResult(resultData) {
+        // Update result data on the page
+        document.getElementById("rollNumber").innerText = resultData.rollNumber;
+        document.getElementById("dob").innerText = resultData.dateOfBirth;
+        document.getElementById("name").innerText = resultData.name;
+        document.getElementById("score").innerText = resultData.Score;
+      }
+
+      function resultLogin() {
+        window.location.href = "./result.html";
+      }
+
+      // Logout function
+      function logout() {
+        // Clear the token from local storage
+        localStorage.removeItem("token");
+
+        // Navigate to the login page and disable the back button
+        window.location.replace("./result.html");
+        history.pushState(null, null, "./result.html");
+      }
+    </script>
+  </body>
+</html>

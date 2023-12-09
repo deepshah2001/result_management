@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Log In</title>
+    <style>
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: #353131;
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #login {
+        width: 350px;
+        background-color: #ffffff;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      #heading {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #333;
+        font-size: 24px;
+        font-weight: 900;
+      }
+
+      #status {
+        text-align: center;
+        margin-top: 15px;
+        color: red;
+        font-size: 20px;
+        font-weight: 700;
+        align-items: center;
+        justify-content: center;
+      }
+
+      input[type="password"],
+      input[type="email"] {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 20px;
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+        font-size: 16px;
+        outline: none;
+        transition: border-color 0.3s, box-shadow 0.3s;
+      }
+
+      input[type="password"]:focus,
+      input[type="email"]:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+      }
+
+      button#submit {
+        display: block;
+        width: 100%;
+        background-color: #007bff;
+        color: #fff;
+        padding: 12px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      button#submit:hover {
+        background-color: #0056b3;
+      }
+
+      a {
+        display: block;
+        margin-top: 15px;
+        text-align: center;
+        color: #007bff;
+        text-decoration: none;
+        transition: color 0.3s;
+      }
+
+      a:hover {
+        color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="login">
+      <h2 id="heading">Log In For Teachers</h2>
+      <form>
+        <label for="email"></label>
+        <input type="email" id="email" placeholder="Email" />
+        <label for="password"></label>
+        <input type="password" id="password" placeholder="Password" />
+        <button id="submit">Log In</button>
+      </form>
+      <a href="./signup.html">Create an Account</a>
+      <a href="./result.html">Check Result for Student</a>
+      <h1 id="status"></h1>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+      const address = "http://localhost:3000";
+
+      const form = document.querySelector("form");
+      const login = document.getElementById("submit");
+      const status = document.getElementById("status");
+
+      login.addEventListener("click", verifyUser);
+
+      function verifyUser(e) {
+        e.preventDefault();
+
+        let email = document.getElementById("email").value;
+        let password = document.getElementById("password").value;
+
+        if (!email || !password) {
+          status.innerText = "Please Fill out all the Fields in the Form!";
+        } else {
+          let myUser = {
+            email: email,
+            password: password,
+          };
+
+          axios
+            .post(`${address}/teacher/verify-teacher`, myUser)
+            .then((response) => {
+              console.log(response);
+              localStorage.setItem("token", response.data.token);
+              window.location.href = "./showResult.html";
+              console.log("Added");
+            })
+            .catch((err) => {
+              if (err.response.status === 401) {
+                status.innerText = "Wrong Password!";
+              } else if (err.response.status === 404) {
+                status.innerText =
+                  "User Doesn't Exist!\nPlease Sign-Up to Continue";
+              } else if (err.response.status === 500) {
+                status.innerText = "Internal Server Error";
+              }
+              console.log(err);
+            });
+
+          form.reset();
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Result Form</title>
+    <style>
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #353131; /* Light background color */
+        position: relative;
+      }
+
+      .form-container {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 300px;
+      }
+
+      .form-container input {
+        width: calc(100% - 16px);
+        padding: 8px;
+        margin-bottom: 15px;
+        box-sizing: border-box;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        outline: none;
+      }
+
+      .form-container button {
+        background-color: #4caf50;
+        color: white;
+        padding: 10px;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Positioning for additional buttons */
+      .show-results-button {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: #007bff;
+        color: white;
+        padding: 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+
+      .logout-button {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        background-color: #dc3545;
+        color: white;
+        padding: 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+
+      #error {
+        text-align: center;
+        margin-top: 15px;
+        color: red;
+        font-size: 20px;
+        font-weight: 700;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body>
+    <button class="show-results-button" onclick="showResults()">
+      Show Results
+    </button>
+
+    <div class="form-container">
+      <form>
+        <input
+          type="number"
+          id="rollNumber"
+          placeholder="Roll Number"
+          required
+        />
+        <input type="text" id="name" placeholder="Name" required />
+        <input type="date" id="dob" required />
+        <input type="number" id="score" placeholder="Score" required />
+        <button type="button" onclick="addResult()" id="submitBtn">
+          Add Result
+        </button>
+      </form>
+      <h1 id="error"></h1>
+    </div>
+    <button class="logout-button" onclick="logOut()">Log Out</button>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        // Retrieve the result data from the query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        // console.log(urlParams);
+        // console.log(window.location.search);
+        const resultDataParam = urlParams.get("resultData");
+        const editModeParam = urlParams.get("editMode");
+        
+        const form = document.querySelector("form");
+        if (resultDataParam) {
+          document.getElementById("rollNumber").disabled = true;
+          
+          // Decode the URL parameter and parse it as JSON
+          const resultData = JSON.parse(decodeURIComponent(resultDataParam));
+          console.log(resultData);
+          // Use the result data to populate the form fields or perform any other actions
+          populateFormFields(resultData);
+          if (editModeParam === "true") {
+            form.setAttribute("data-edit-mode", "true");
+            document.getElementById("submitBtn").innerText = "Update Result";
+          }
+        }
+      });
+
+      function populateFormFields(resultData) {
+        // Assuming you have form fields with corresponding IDs
+        document.getElementById("rollNumber").value = resultData.rollNumber;
+        document.getElementById("name").value = resultData.name;
+        document.getElementById("dob").value = resultData.dateOfBirth;
+        document.getElementById("score").value = resultData.Score;
+      }
+
+      function addResult() {
+        const editMode =
+          document.querySelector("form").getAttribute("data-edit-mode") ===
+          "true";
+
+        let rollNumber = document.getElementById("rollNumber").value;
+        let name = document.getElementById("name").value;
+        let birthDate = document.getElementById("dob").value;
+        let dob = new Date(birthDate);
+        dob = dob.toLocaleDateString("en-CA");
+        let score = document.getElementById("score").value;
+        console.log(typeof dob);
+
+        if (rollNumber === "" || name === "" || dob === "" || score === "") {
+          alert("Please fill out all the required fields in the form!");
+        } else {
+          let myResult = {
+            rollNumber: rollNumber,
+            name: name,
+            dob: dob,
+            score: score,
+          };
+
+          const token = localStorage.getItem("token");
+
+          if (editMode) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const resultDataParam = urlParams.get("resultData");
+            let resultId;
+
+            if (resultDataParam) {
+              // Decode the URL parameter and parse it as JSON
+              const resultData = JSON.parse(
+                decodeURIComponent(resultDataParam)
+              );
+              resultId = resultData._id;
+            }
+
+            axios
+              .patch(
+                `http://localhost:3000/results/edit-result/${resultId}`,
+                myResult,
+                {
+                  headers: { Authorization: token },
+                }
+              )
+              .then((response) => {
+                // showExpenses(response.data.expense);
+                console.log(" Here ", response);
+                if (response.status === 409) {
+                  document.getElementById("error").innerHTML =
+                    "Roll Number Already Exists!";
+                }
+                if (response.status === 201) {
+                  window.location.href = "./showResult.html";
+                }
+              })
+              .catch((err) => {
+                document.getElementById("error").innerHTML =
+                  "Something Went Wrong!";
+                console.log(err);
+              });
+          } else {
+            axios
+              .post("http://localhost:3000/results/add-result", myResult, {
+                headers: { Authorization: token },
+              })
+              .then((response) => {
+                // showExpenses(response.data.expense);
+                console.log(response);
+                  document.getElementById("error").innerHTML = response.data.error;
+
+                if (response.status === 201) {
+                  window.location.href = "./showResult.html";
+                }
+              })
+              .catch((err) => {
+                document.getElementById("error").innerHTML =
+                  "Something Went Wrong!";
+                console.log(err);
+              });
+          }
+        }
+      }
+
+      function showResults() {
+        window.location.href = "./showResult.html";
+      }
+
+      function logOut() {
+        // Clear the token from local storage
+        localStorage.removeItem("token");
+
+        // Navigate to the login page and disable the back button
+        window.location.replace("./login.html");
+        history.pushState(null, null, "./login.html");
+      }
+    </script>
+  </body>
+</html>
